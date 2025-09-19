@@ -5,7 +5,7 @@ set -e
 dnf update -y
 dnf install -y git 
 
-
+https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
 
 # Install official MySQL client
 wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
@@ -14,16 +14,15 @@ rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
 dnf install -y mysql-community-client
 
 # Clone the repo
-cd /tmp
-rm -rf 3-tier-aws-terraform-packer-project
-git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-project.git
 
 # Deploy backend PHP app directly to /var/www/html
-rm -rf /var/www/html/*
-cp -r 3-tier-aws-terraform-packer-project/application_code/app_files/* /var/www/html/
+cd ~
+git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
+cd ~
+cp -r 3-tier-aws-terraform-packer-statelock-project/application_code/app_files .
 
 # Copy SQL file for database initialization
-cp /tmp/3-tier-aws-terraform-packer-project/packer/backend/appdb.sql /tmp/appdb.sql
+cp /tmp/3-tier-aws-terraform-packer-statelock-project/application_code/webappdb.sql /tmp/webappdb.sql
 
 # Database initialization function (RUNS IN FOREGROUND)
 initialize_database() {
@@ -43,7 +42,7 @@ initialize_database() {
             
             # Import the SQL schema
             echo "📦 Importing database schema..."
-            if mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" < /tmp/appdb.sql; then
+            if mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" < /tmp/webappdb.sql; then
                 echo "🎉 Database initialization complete!"
                 return 0
             else
@@ -62,84 +61,46 @@ initialize_database() {
 # Run database initialization (in foreground)
 initialize_database
 
+cd ~
+cd 3-tier-aws-terraform-packer-statelock-project/application_code/app_files
+
+# Update the meta tag in HTML with the actual ALB DNS from Terraform
+
+sed -i "s|rds-address|${db_host}|g" DbConfig.js
+sed -i "s|db-user|${db_user}|g" DbConfig.js
+sed -i "s|db-password|${db_password}|g" DbConfig.js
+
+
+
 # Configure Apache with environment variables
-# Configure Apache with environment variables
-echo "📝 Configuring Apache environment..."
-cat > /etc/httpd/conf.d/app.conf << 'EOL'
-<VirtualHost *:80>
-    DocumentRoot /var/www/html
-    <Directory /var/www/html>
-        AllowOverride All
-        Require all granted
-        # Use FallbackResource instead of complex rewrite rules
-        FallbackResource /index.php
-    </Directory>
+sudo chown -R ec2-user:ec2-user /home/ec2-user
+sudo chmod -R 755 /home/ec2-user/app-tier
 
-    # Pass environment variables from Terraform
-    SetEnv DB_HOST ${db_host}
-    SetEnv DB_USERNAME ${db_user}
-    SetEnv DB_PASSWORD ${db_password}
-    SetEnv DB_NAME ${db_name}
-    SetEnv ENVIRONMENT ${environment}
-    SetEnv PROJECT_NAME ${project_name}
-</VirtualHost>
-EOL
 
-# Also create .env file as backup
-echo "📝 Creating .env file..."
-cat > /var/www/html/.env << EOL
-DB_HOST=${db_host}
-DB_USERNAME=${db_user}
-DB_PASSWORD=${db_password}
-DB_NAME=${db_name}
-ENVIRONMENT=${environment}
-PROJECT_NAME=${project_name}
-EOL
+su - ec2-user <<'EOF'
+# Load nvm environment
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Set proper permissions
-chown apache:apache /var/www/html/.env
-chmod 640 /var/www/html/.env
+cd ~/app-tier
 
-# Install PHP dependencies if composer.json exists (safe method)
-if [ -f /var/www/html/composer.json ]; then
-    echo "📦 Installing PHP dependencies..."
-    # Set proper home directory for composer
-    export HOME=/home/ec2-user
-    export COMPOSER_HOME=/home/ec2-user/.composer
-    mkdir -p $COMPOSER_HOME
-    chown ec2-user:ec2-user $COMPOSER_HOME
-    
-    # Run composer as ec2-user
-    sudo -u ec2-user bash -c "
-        cd /var/www/html
-        export COMPOSER_ALLOW_SUPERUSER=1
-        composer install --no-dev --optimize-autoloader --no-interaction
-    "
-fi
+# Install dependencies
+npm install @aws-sdk/client-secrets-manager mysql2
+npm install aws-sdk
+npm install
+npm audit fix || true   # don’t fail if audit fix has nothing to fix
 
-# Restart Apache to apply all configurations
-echo "🔄 Restarting Apache..."
-systemctl restart httpd
+# Start app with PM2
+pm2 start index.js
 
-# Test the configuration
-echo "🧪 Testing API configuration..."
-sleep 5
+# Configure PM2 startup (systemd for ec2-user)
+pm2 startup systemd -u ec2-user --hp /home/ec2-user
+pm2 save
+EOF
 
-# Test health endpoint
-if curl -s http://localhost/api/health > /dev/null; then
-    echo "✅ API health check passed!"
-else
-    echo "❌ API health check failed!"
-    echo "Checking Apache error logs:"
-    tail -20 /var/log/httpd/error_log
-fi
 
-# Test database connection through API
-if curl -s http://localhost/api/db-test > /dev/null; then
-    echo "✅ Database connection test passed!"
-else
-    echo "⚠️ Database connection test may have failed (check API)"
-fi
+
+
 
 echo "🎉 Backend setup completed successfully!"
 echo "🌐 Server: $(hostname)"

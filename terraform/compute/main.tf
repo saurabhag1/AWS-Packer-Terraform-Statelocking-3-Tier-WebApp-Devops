@@ -148,7 +148,7 @@ resource "aws_lb" "app" {
 
 resource "aws_lb_target_group" "app" {
   name     = "${var.project_name}-app-tg"
-  port     = 80
+  port     = 4000
   protocol = "HTTP"
   vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
 
@@ -157,7 +157,7 @@ resource "aws_lb_target_group" "app" {
     healthy_threshold   = 2
     interval            = 30
     matcher             = "200"
-    path                = "/"
+    path                = "/health"
     port                = "traffic-port"
     protocol            = "HTTP"
     timeout             = 5

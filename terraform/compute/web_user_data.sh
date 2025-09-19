@@ -3,72 +3,57 @@ set -e
 
 # Update and install dependencies
 dnf update -y
-dnf install -y httpd php
+dnf install -y nginx git
 
 # Enable and start Apache
 systemctl enable httpd
 systemctl start httpd
 
-# Clone the repo
-cd /tmp
-rm -rf 3-tier-aws-terraform-packer-project
-git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-project.git
 
-# Deploy frontend files
-rm -rf /var/www/html/*
-cp -r 3-tier-aws-terraform-packer-project/application_code/web_files/* /var/www/html/
+# Deploy backend PHP app directly to /var/www/html
+cd ~
+git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
+cd ~
+cp -r 3-tier-aws-terraform-packer-statelock-project/application_code/web_files .
 
-$backendUrl = 'http://${app_alb_dns}/api';
 
-# Create environment configuration endpoint
-cat > /var/www/html/env-config.php << EOF
-<?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 
-// Get backend URL from Terraform variables
-\$backendUrl = 'http://${app_alb_dns}/api';
 
-echo json_encode([
-    'backendUrl' => \$backendUrl,
-    'environment' => '${environment}',
-    'project' => '${project_name}',
-    'timestamp' => date('c')
-]);
-?>
+# Ensure ownership
+sudo chown -R ec2-user:ec2-user /home/ec2-user
+sudo chmod -R 755 /home/ec2-user
+
+# Run build as ec2-user
+su - ec2-user <<'EOF'
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Sync latest code
+rsync -av --delete ~/application-code/web-tier/ ~/web-tier/
+
+cd ~/web-tier
+npm install
+npm run build
 EOF
 
-# Create a dynamic configuration file
-cat > /var/www/html/config.js << EOF
-// Auto-generated configuration
-window.APP_CONFIG = {
-    API_BASE_URL: 'http://${app_alb_dns}/api',
-    ENVIRONMENT: '${environment}',
-    PROJECT_NAME: '${project_name}',
-    TIMESTAMP: '$(date -Iseconds)'
-};
-EOF
+cd ~
+cd 3-tier-aws-terraform-packer-statelock-project/application_code
 
 # Update the meta tag in HTML with the actual ALB DNS from Terraform
-sed -i "s|http://APP_ALB_DNS_PLACEHOLDER/api|http://${app_alb_dns}/api|g" /var/www/html/index.html
 
-# Set proper permissions
-chown -R apache:apache /var/www/html
-chmod -R 755 /var/www/html
+sed -i "s|[REPLACE-WITH-INTERNAL-LB-DNS]|${app_alb_dns}|g" nginx.conf
 
-# Configure Apache to allow CORS
-cat > /etc/httpd/conf.d/cors.conf << 'EOL'
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
-EOL
+# Replace nginx config
+sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx-backup.conf || true
+sudo cp -f /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/nginx.conf /etc/nginx/nginx.conf
 
-# Enable mod_rewrite and mod_headers
-sed -i '/LoadModule rewrite_module/s/^#//g' /etc/httpd/conf.modules.d/00-base.conf
-sed -i '/LoadModule headers_module/s/^#//g' /etc/httpd/conf.modules.d/00-base.conf
+# Validate config before reload
+sudo nginx -t
 
-# Restart Apache to apply all configurations
-systemctl restart httpd
+# Restart nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+
 
 echo "🎉 Frontend setup completed successfully!"
 echo "🌐 Server: $(hostname)"
