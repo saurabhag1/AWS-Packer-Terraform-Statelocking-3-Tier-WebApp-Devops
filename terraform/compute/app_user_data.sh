@@ -19,7 +19,7 @@ dnf install -y mysql-community-client
 cd ~
 git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
 cd ~
-cp -r 3-tier-aws-terraform-packer-statelock-project/application_code/app_files .
+
 
 # Copy SQL file for database initialization
 cp /tmp/3-tier-aws-terraform-packer-statelock-project/application_code/webappdb.sql /tmp/webappdb.sql
@@ -58,11 +58,12 @@ initialize_database() {
     return 1
 }
 
-# Run database initialization (in foreground)
-initialize_database
 
-cd ~
-cd 3-tier-aws-terraform-packer-statelock-project/application_code/app_files
+# Make script executable and run it
+chmod +x app.sh
+sudo ./app.sh
+
+cd /home/ec2-user/app_files
 
 # Update the meta tag in HTML with the actual ALB DNS from Terraform
 
@@ -70,37 +71,7 @@ sed -i "s|rds-address|${db_host}|g" DbConfig.js
 sed -i "s|db-user|${db_user}|g" DbConfig.js
 sed -i "s|db-password|${db_password}|g" DbConfig.js
 
-
-
-# Configure Apache with environment variables
-sudo chown -R ec2-user:ec2-user /home/ec2-user
-sudo chmod -R 755 /home/ec2-user/app-tier
-
-
-su - ec2-user <<'EOF'
-# Load nvm environment
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-cd ~/app-tier
-
-# Install dependencies
-npm install @aws-sdk/client-secrets-manager mysql2
-npm install aws-sdk
-npm install
-npm audit fix || true   # don’t fail if audit fix has nothing to fix
-
-# Start app with PM2
-pm2 start index.js
-
-# Configure PM2 startup (systemd for ec2-user)
-pm2 startup systemd -u ec2-user --hp /home/ec2-user
-pm2 save
-EOF
-
-
-
-
+pm2 reload index.js
 
 echo "🎉 Backend setup completed successfully!"
 echo "🌐 Server: $(hostname)"
