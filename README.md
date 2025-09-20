@@ -177,4 +177,11 @@ du -sh * .
 
 # "Important: Delete the snapshots along with the EBS volume, otherwise I may be charged."
 
+
+---
+
+# Manually Delete the S3 Bucket and run the command in the [ backend-bootstrap ] folder
+```bash
+terraform destroy -auto-approve
+``` 
 [![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/c757fcf45b14c2ab0a65b0d01633685c191d88ec/Screenshot%20from%202025-09-20%2017-12-11.png)](https://www.youtube.com/@devopsHarishShetty)
