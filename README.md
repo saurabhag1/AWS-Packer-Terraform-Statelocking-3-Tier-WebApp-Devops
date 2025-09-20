@@ -7,6 +7,61 @@
 
 [![Channel Link](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer%20-structure.jpg)](https://youtu.be/M6BxKpSvWa4)
 
+
+---
+
+## Create a Security Group
+
+| SG name      | inbound        | Access         | Description                                  |
+|--------------|----------------|---------------|----------------------------------------------|
+| Jump Server  | 22             | MY-ip         | access from my laptop                        |
+| 1. web-frontend-alb     | 80,         | 0.0.0.0/24    | all access from internet                     |
+| 2. Web-srv-sg      | 80,  22    | 1. web-frontend-alb       | only front-alb and jump server access        |
+|              |                | jump-server   |                                              |
+| 3. app-Internal-alb-sg     |  80,  | 2. Web-srv-sg      | only web-srv                                 |
+| 4. app-Srv-sg      | 4000,  22 | 3. app-Internal-alb-sg | only 3. app-Internal-alb-sg and jump server access          |
+|              |                | jump-server   |                                              |
+| 5. DB-srv       | 3306, 22       | 4. app-Srv-sg       | only app-srv and jump server access          |
+|              |      3306          | jump-server   |                                              |
+
+---
+
+## Create a VPC
+
+| #  | Component         | Name                  | CIDR / Details                                |
+|----|-------------------|-----------------------|-----------------------------------------------|
+| 1  | VPC              | 3-tier-vpc            | 10.75.0.0/16                                  |
+| 12 | Subnets          | Public-Subnet-1a      | 10.75.1.0/24                                  |
+|    |                  | Public-Subnet-1b      | 10.75.2.0/24                                  |
+|    |                  | Public-Subnet-1c      | 10.75.3.0/24                                  |
+|    |                  | Web-Private-Subnet-1a | 10.75.4.0/24                                  |
+|    |                  | Web-Private-Subnet-1b | 10.75.5.0/24                                  |
+|    |                  | Web-Private-Subnet-1c | 10.75.6.0/24                                  |
+|    |                  | App-Private-Subnet-1a | 10.75.7.0/24                                  |
+|    |                  | App-Private-Subnet-1b | 10.75.8.0/24                                  |
+|    |                  | App-Private-Subnet-1c | 10.75.9.0/24                                  |
+|    |                  | DB-Private-Subnet-1a  | 10.75.10.0/24                                 |
+|    |                  | DB-Private-Subnet-1b  | 10.75.11.0/24                                 |
+|    |                  | DB-Private-Subnet-1c  | 10.75.12.0/24                                 |
+
+| #   | Component         | Name/Route Table                | CIDR/Details      | NAT Gateway | Notes                                         |
+|-----|-------------------|---------------------------------|-------------------|-------------|-----------------------------------------------|
+| 1   | Internet Gateway  | 3-tier-igw                      |                   |             |                                               |
+| 3   | Nat gateway       | 3-tier-1a                       |                   |             |                                               |
+|     |                   | 3-tier-1b                       |                   |             |                                               |
+|     |                   | 3-tier-1c                       |                   |             |                                               |
+| 10  | Route-Table       | 3-tier-Public-rt                |                   |             |                                               |
+|     |                   | 3-tier-web-Private-rt-1a        | 10.75.4.0/24      | nat-1a      |                                               |
+|     |                   | 3-tier-web-Private-rt-1b        | 10.75.5.0/24      | nat-1b      |                                               |
+|     |                   | 3-tier-web-Private-rt-1c        | 10.75.6.0/24      | nat-1c      |                                               |
+|     |                   | 3-tier-app-Private-rt-1a        | 10.75.7.0/24      | nat-1a      |                                               |
+|     |                   | 3-tier-app-Private-rt-1b        | 10.75.8.0/24      | nat-1b      |                                               |
+|     |                   | 3-tier-app-Private-rt-1c        | 10.75.9.0/24      | nat-1c      |                                               |
+|     |                   | 3-tier-db-Private-rt-1a         | 10.75.10.0/24     | nat-1a      |                                               |
+|     |                   | 3-tier-db-Private-rt-1b         | 10.75.11.0/24     | nat-1b      |                                               |
+|     |                   | 3-tier-db-Private-rt-1c         | 10.75.12.0/24     | nat-1c      |                                               |
+ 
+
 ---
 
 ## Steps
