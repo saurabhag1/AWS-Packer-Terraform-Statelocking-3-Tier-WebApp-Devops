@@ -113,3 +113,11 @@ cd 3-tier-aws-terraform-packer-project-main/terraform/compute
 ```bash
 du -sh * .
 ```
+
+# SORRY FOR NOT SHOWING TO DESTROYING THE INFRA
+
+```bash
+./destroy.sh
+```
+
+# "Important: Delete the snapshots along with the EBS volume, otherwise I may be charged."
