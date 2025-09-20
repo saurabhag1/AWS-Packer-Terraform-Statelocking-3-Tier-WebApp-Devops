@@ -3,9 +3,9 @@
 ## For more projects, check out  
 [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer.jpg)](https://www.youtube.com/@devopsHarishShetty)
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer.jpg)](https://youtu.be/M6BxKpSvWa4)
 
-[![Channel Link](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer%20-structure.jpg)](https://www.youtube.com/@devopsHarishShetty)
+[![Channel Link](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer%20-structure.jpg)](https://youtu.be/M6BxKpSvWa4)
 
 ---
 
@@ -113,11 +113,13 @@ cd 3-tier-aws-terraform-packer-project-main/terraform/compute
 ```bash
 du -sh * .
 ```
-
-# SORRY FOR NOT SHOWING TO DESTROYING THE INFRA
+ 
+# SORRY FOR NOT SHOWING TO DESTROYING THE INFRA IN Video
 
 ```bash
 ./destroy.sh
 ```
 
 # "Important: Delete the snapshots along with the EBS volume, otherwise I may be charged."
+
+[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/c757fcf45b14c2ab0a65b0d01633685c191d88ec/Screenshot%20from%202025-09-20%2017-12-11.png)](https://www.youtube.com/@devopsHarishShetty)
