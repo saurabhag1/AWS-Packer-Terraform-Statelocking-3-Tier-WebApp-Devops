@@ -1,4 +1,5 @@
-# 3-Tier Kubernetes Project with GitOps, Dynamic PVC, and Route-53 Integration
+# 3-Tier Aws Terraform Project + Packer with StateID Lock in S3 Bucket 
+
 
 ## For more projects, check out  
 ## [https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
