@@ -9,7 +9,7 @@ cd /home/ec2-user
 sudo chown -R ec2-user:ec2-user /home/ec2-user
 sudo chmod -R 755 /home/ec2-user
 
-rm -rf 3-tier-aws-terraform-packer-project-main/
+sudo rm -rf 3-tier-aws-terraform-packer-statelock-project
 git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
 
 cp -rf 3-tier-aws-terraform-packer-statelock-project/application_code/web_files .

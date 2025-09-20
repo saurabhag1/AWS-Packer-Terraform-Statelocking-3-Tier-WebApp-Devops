@@ -3,12 +3,12 @@ set -e   # exit on error
 
 # Download app-tier code
 cd /home/ec2-user
-rm -rf 3-tier-aws-terraform-packer-project-main/
+sudo rm -rf 3-tier-aws-terraform-packer-statelock-project/
 git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
 
 cp -rf 3-tier-aws-terraform-packer-statelock-project/application_code/app_files .
 
-cd ~
+cd /home/ec2-user
 
 # Ensure correct ownership/permissions
 sudo chown -R ec2-user:ec2-user /home/ec2-user
@@ -20,7 +20,7 @@ su - ec2-user <<'EOF'
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-cd ~/app_files
+cd /home/ec2-user/app_files
 # Install dependencies
 npm install @aws-sdk/client-secrets-manager mysql2
 npm install aws-sdk

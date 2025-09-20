@@ -16,13 +16,14 @@ dnf install -y mysql-community-client
 # Clone the repo
 
 # Deploy backend PHP app directly to /var/www/html
-cd ~
+cd /home/ec2-user/
 git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
-cd ~
+cd /home/ec2-user/
 
 
 # Copy SQL file for database initialization
-cp /tmp/3-tier-aws-terraform-packer-statelock-project/application_code/webappdb.sql /tmp/webappdb.sql
+cp -rf /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/app.sh /home/ec2-user/
+cp /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/webappdb.sql /tmp/webappdb.sql
 
 # Database initialization function (RUNS IN FOREGROUND)
 initialize_database() {
@@ -60,6 +61,7 @@ initialize_database() {
 
 
 # Make script executable and run it
+
 chmod +x app.sh
 sudo ./app.sh
 
