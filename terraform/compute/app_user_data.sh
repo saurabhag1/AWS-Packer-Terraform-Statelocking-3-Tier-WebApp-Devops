@@ -17,7 +17,7 @@ echo "========== Configuring DbConfig.js =========="
 sed -i "s|REPLACE-WITH-RDS-ENDPOINT|${db_host}|g" $APP_DIR/app_files/DbConfig.js
 sed -i "s|REPLACE-WITH-DB-USER|${db_user}|g" $APP_DIR/app_files/DbConfig.js
 sed -i "s|REPLACE-WITH-DB-PASSWORD|${db_password}|g" $APP_DIR/app_files/DbConfig.js
-sed -i "s|REPLACE-WITH-DB-NAME|${db_name}|g" $APP_DIR/app_files/DbConfig.js
+
 
 echo "========== Applying database schema =========="
 mysql -h ${db_host} -u ${db_user} -p${db_password} ${db_name} < $APP_DIR/webappdb.sql

@@ -1,6 +1,6 @@
 module.exports = Object.freeze({
-    DB_HOST : 'rds-address',
-    DB_USER : 'db-user',
-    DB_PWD : 'db-password',
+    DB_HOST : 'REPLACE-WITH-RDS-ENDPOINT',
+    DB_USER : 'REPLACE-WITH-DB-USER',
+    DB_PWD : 'REPLACE-WITH-DB-PASSWORD',
     DB_DATABASE : 'webappdb'
 });
