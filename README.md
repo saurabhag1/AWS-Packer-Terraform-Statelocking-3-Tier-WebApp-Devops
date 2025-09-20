@@ -88,7 +88,7 @@ cd 3-tier-aws-terraform-packer-project-main/terraform/compute
 du -sh * .
 ```
 
-- Packer
+- Packer [for testing]
 
 ```bash
 PACKER_LOG=1 packer build packer/backend/backend.json
