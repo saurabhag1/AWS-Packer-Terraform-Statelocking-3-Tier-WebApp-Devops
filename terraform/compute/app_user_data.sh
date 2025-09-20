@@ -64,18 +64,16 @@ initialize_database
 
 
 echo "========== Installing Node.js app dependencies =========="
-cd $APP_DIR/app_files
-npm install
+cp -rf /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/app_files  /home/ec2-user
+cp -rf /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/app.sh  /home/ec2-user
+chmod +x /home/ec2-user/app.sh
 
-echo "========== Installing PM2 globally =========="
-npm install -g pm2
 
-echo "========== Starting app with PM2 =========="
-pm2 start index.js --name "${project_name}-app"
+echo "========== Running web.sh =========="
+/home/ec2-user/app.sh
 
-echo "========== Saving PM2 process list & enabling startup =========="
-pm2 save
-pm2 startup systemd -u ec2-user --hp /home/ec2-user
+cd /home/ec2-user/app_files
+
 
 echo "🎉 App tier setup completed successfully!"
 echo "🌐 Server: $(hostname)"
