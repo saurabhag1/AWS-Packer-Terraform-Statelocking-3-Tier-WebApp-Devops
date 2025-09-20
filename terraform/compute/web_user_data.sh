@@ -1,39 +1,36 @@
 #!/bin/bash
 set -e
 
-# Update and install dependencies
+echo "========== Updating system & installing dependencies =========="
 dnf update -y
 dnf install -y nginx git
 
-
-# Deploy backend PHP app directly to /var/www/html
+echo "========== Cloning application repository =========="
 cd /home/ec2-user
-git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
-cp -rf /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/web.sh /home/ec2-user/
+git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git || true
 
+echo "========== Copying web.sh =========="
+cp -f /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/web.sh /home/ec2-user/web.sh
+chmod +x /home/ec2-user/web.sh
 
-cd /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code
+echo "========== Preparing nginx.conf =========="
+# Replace placeholder BEFORE moving nginx.conf into /etc
+sed -i "s|REPLACE-WITH-INTERNAL-LB-DNS|${app_alb_dns}|g" \
+    /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/nginx.conf
 
-# Update the meta tag in HTML with the actual ALB DNS from Terraform
+# Backup old config & apply new one
+mv /etc/nginx/nginx.conf /etc/nginx/nginx-backup.conf || true
+cp -f /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/nginx.conf /etc/nginx/nginx.conf
 
-sed -i "s|[REPLACE-WITH-INTERNAL-LB-DNS]|${app_alb_dns}|g" nginx.conf
+echo "========== Running web.sh =========="
+/home/ec2-user/web.sh
 
-# Replace nginx config
-sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx-backup.conf || true
-sudo cp -f /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/nginx.conf /etc/nginx/nginx.conf
+echo "========== Validating nginx configuration =========="
+nginx -t
 
-cd /home/ec2-user/
-
-chmod +x web.sh
-sudo ./web.sh
-
-# Validate config before reload
-sudo nginx -t
-
-# Restart nginx
-sudo systemctl restart nginx
-sudo systemctl enable nginx
-
+echo "========== Restarting & enabling nginx =========="
+systemctl restart nginx
+systemctl enable nginx
 
 echo "🎉 Frontend setup completed successfully!"
 echo "🌐 Server: $(hostname)"
