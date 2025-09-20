@@ -180,7 +180,7 @@ du -sh * .
 
 ---
 
-# Manually Delete the S3 Bucket and run the command in the [ backend-bootstrap ] folder
+# Manually Delete the S3 Bucket and dynamodb table / run the command in the [ backend-bootstrap ] folder
 ```bash
 terraform destroy -auto-approve
 ``` 
