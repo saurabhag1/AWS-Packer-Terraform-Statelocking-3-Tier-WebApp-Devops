@@ -1,81 +1,43 @@
 #!/bin/bash
 set -e
 
-# Update and install dependencies
+echo "========== Updating system & installing dependencies =========="
 dnf update -y
-dnf install -y git 
+dnf install -y git mysql -y   # MySQL client for RDS
+dnf install -y nodejs npm
 
-https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
+echo "========== Cloning application repository =========="
+cd /home/ec2-user
+git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git || true
 
-# Install official MySQL client
-wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
-dnf install -y mysql80-community-release-el9-1.noarch.rpm
-rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
-dnf install -y mysql-community-client
+APP_DIR=/home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code
 
-# Clone the repo
+echo "========== Configuring DbConfig.js =========="
+# Replace placeholders with Terraform-provided values
+sed -i "s|REPLACE-WITH-RDS-ENDPOINT|${db_host}|g" $APP_DIR/app_files/DbConfig.js
+sed -i "s|REPLACE-WITH-DB-USER|${db_user}|g" $APP_DIR/app_files/DbConfig.js
+sed -i "s|REPLACE-WITH-DB-PASSWORD|${db_password}|g" $APP_DIR/app_files/DbConfig.js
+sed -i "s|REPLACE-WITH-DB-NAME|${db_name}|g" $APP_DIR/app_files/DbConfig.js
 
-# Deploy backend PHP app directly to /var/www/html
-cd /home/ec2-user/
-git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
-cd /home/ec2-user/
+echo "========== Applying database schema =========="
+mysql -h ${db_host} -u ${db_user} -p${db_password} ${db_name} < $APP_DIR/webappdb.sql
 
+echo "========== Installing Node.js app dependencies =========="
+cd $APP_DIR/app_files
+npm install
 
-# Copy SQL file for database initialization
-cp -rf /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/app.sh /home/ec2-user/
-cp /home/ec2-user/3-tier-aws-terraform-packer-statelock-project/application_code/webappdb.sql /tmp/webappdb.sql
+echo "========== Installing PM2 globally =========="
+npm install -g pm2
 
-# Database initialization function (RUNS IN FOREGROUND)
-initialize_database() {
-    echo "🔄 Initializing database..."
-    
-    # Database connection parameters (from Terraform template)
-    DB_HOST="${db_host}"
-    DB_NAME="${db_name}"
-    DB_USER="${db_user}"
-    DB_PASSWORD="${db_password}"
-    
-    # Wait for RDS to be ready (with timeout)
-    echo "⏳ Waiting for RDS to be available..."
-    for i in {1..30}; do
-        if mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" -e "SELECT 1" 2>/dev/null; then
-            echo "✅ Database connection successful!"
-            
-            # Import the SQL schema
-            echo "📦 Importing database schema..."
-            if mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" < /tmp/webappdb.sql; then
-                echo "🎉 Database initialization complete!"
-                return 0
-            else
-                echo "❌ Failed to import database schema!"
-                return 1
-            fi
-        fi
-        echo "📡 Database not ready yet (attempt $i/30), retrying in 10 seconds..."
-        sleep 10
-    done
-    
-    echo "❌ Timeout waiting for database connection!"
-    return 1
-}
+echo "========== Starting app with PM2 =========="
+pm2 start index.js --name "${project_name}-app"
 
+echo "========== Saving PM2 process list & enabling startup =========="
+pm2 save
+pm2 startup systemd -u ec2-user --hp /home/ec2-user
 
-# Make script executable and run it
-
-chmod +x app.sh
-sudo ./app.sh
-
-cd /home/ec2-user/app_files
-
-# Update the meta tag in HTML with the actual ALB DNS from Terraform
-
-sed -i "s|rds-address|${db_host}|g" DbConfig.js
-sed -i "s|db-user|${db_user}|g" DbConfig.js
-sed -i "s|db-password|${db_password}|g" DbConfig.js
-
-pm2 reload index.js
-
-echo "🎉 Backend setup completed successfully!"
+echo "🎉 App tier setup completed successfully!"
 echo "🌐 Server: $(hostname)"
 echo "📊 Environment: ${environment}"
 echo "🏷️ Project: ${project_name}"
+echo "🔗 Connected DB: ${db_name} @ ${db_host}"
