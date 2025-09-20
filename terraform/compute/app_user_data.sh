@@ -20,18 +20,25 @@ sed -i "s|REPLACE-WITH-DB-PASSWORD|${db_password}|g" $APP_DIR/app_files/DbConfig
 sed -i "s|REPLACE-WITH-DB-NAME|${db_name}|g" $APP_DIR/app_files/DbConfig.js
 
 echo "========== Preparing SQL schema =========="
-cp $APP_DIR/webappdb.sql /tmp/appdb.sql
+cp $APP_DIR/appdb.sql /tmp/appdb.sql
 
 echo "========== Initializing database =========="
 
 initialize_database() {
     echo "⏳ Waiting for RDS to be available..."
+
     for i in {1..30}; do
-        if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" -e "SELECT 1" 2>/dev/null; then
+        # Try a simple connection to check if DB is up
+        if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" -e "SELECT 1;" 2>/dev/null; then
             echo "✅ Database connection successful!"
-            
+
+            # Ensure the database exists
+            # echo "📂 Ensuring database ${db_name} exists..."
+            # mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" -e "CREATE DATABASE IF NOT EXISTS \`${db_name}\`;"
+
+            # Import schema safely
             echo "📦 Importing schema into ${db_name}..."
-            if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" "${db_name}" < /tmp/appdb.sql; then
+            if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}"  < /tmp/appdb.sql; then
                 echo "🎉 Database initialization complete!"
                 return 0
             else
@@ -39,13 +46,15 @@ initialize_database() {
                 return 1
             fi
         fi
+
         echo "📡 Database not ready yet (attempt $i/30), retrying in 10 seconds..."
         sleep 10
     done
-    
+
     echo "❌ Timeout waiting for database connection!"
     return 1
 }
+
 
 initialize_database
 
