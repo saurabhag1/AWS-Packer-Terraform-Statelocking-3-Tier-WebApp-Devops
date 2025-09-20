@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 -- Insert data (duplicates will be ignored)
 INSERT IGNORE INTO transactions (amount, description) VALUES
-(500, 'bike');
+(500, 'bike'),
 (400, 'groceries');
