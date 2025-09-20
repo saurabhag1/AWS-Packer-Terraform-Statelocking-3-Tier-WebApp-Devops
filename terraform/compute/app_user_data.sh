@@ -17,10 +17,37 @@ echo "========== Configuring DbConfig.js =========="
 sed -i "s|REPLACE-WITH-RDS-ENDPOINT|${db_host}|g" $APP_DIR/app_files/DbConfig.js
 sed -i "s|REPLACE-WITH-DB-USER|${db_user}|g" $APP_DIR/app_files/DbConfig.js
 sed -i "s|REPLACE-WITH-DB-PASSWORD|${db_password}|g" $APP_DIR/app_files/DbConfig.js
+sed -i "s|REPLACE-WITH-DB-NAME|${db_name}|g" $APP_DIR/app_files/DbConfig.js
 
+echo "========== Preparing SQL schema =========="
+cp $APP_DIR/webappdb.sql /tmp/appdb.sql
 
-echo "========== Applying database schema =========="
-mysql -h ${db_host} -u ${db_user} -p${db_password} ${db_name} < $APP_DIR/webappdb.sql
+echo "========== Initializing database =========="
+
+initialize_database() {
+    echo "⏳ Waiting for RDS to be available..."
+    for i in {1..30}; do
+        if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" -e "SELECT 1" 2>/dev/null; then
+            echo "✅ Database connection successful!"
+            
+            echo "📦 Importing schema into ${db_name}..."
+            if mysql -h "${db_host}" -u "${db_user}" -p"${db_password}" "${db_name}" < /tmp/appdb.sql; then
+                echo "🎉 Database initialization complete!"
+                return 0
+            else
+                echo "❌ Failed to import schema!"
+                return 1
+            fi
+        fi
+        echo "📡 Database not ready yet (attempt $i/30), retrying in 10 seconds..."
+        sleep 10
+    done
+    
+    echo "❌ Timeout waiting for database connection!"
+    return 1
+}
+
+initialize_database
 
 echo "========== Installing Node.js app dependencies =========="
 cd $APP_DIR/app_files
