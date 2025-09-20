@@ -59,12 +59,14 @@ aws configure
 
 - Github Repo: https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git  
   *(because you've changed the bucket-name in the Terraform Project)*
-- Source_ami: `"ami-0533167fcff018a86"` (it's in the packer .json files)  
+
+- Source_ami: `"ami-0533167fcff018a86"`   Amazon Linux 2023 kernel-6.12 AMI    (it's in the packer .json files)  
   *(not necessary to replace, but if this AMI is not available in the future then you have to update)*
-- Amazon Linux 2023 kernel-6.12 AMI  
-  *(not necessary to replace, but if this AMI is not available in the future then you have to update)*
+
 - Create S3 Bucket: for statelock it creates the DynamoDB and S3 bucket - make sure you give a unique bucket name
+
 - Path: `backend-bootstrap` – `terraform init` – `terraform plan` – `terraform apply -auto-approve`
+
 - S3 Bucket Name: `three-tier-terrafrom-s3-8745`  
   *(replace with your new bucket name in all the Terraform files – use the visual search lens for replacement as shown in the video)*
 
