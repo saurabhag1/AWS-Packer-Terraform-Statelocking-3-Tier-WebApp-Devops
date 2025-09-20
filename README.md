@@ -65,7 +65,7 @@ aws configure
 
 - Create S3 Bucket: for statelock it creates the DynamoDB and S3 bucket - make sure you give a unique bucket name
 
-- Path: `backend-bootstrap` – `terraform init` – `terraform plan` – `terraform apply -auto-approve`
+- Path: `backend-bootstrap` | `terraform init` | `terraform plan` | `terraform apply -auto-approve`
 
 - S3 Bucket Name: `three-tier-terrafrom-s3-8745`  
   *(replace with your new bucket name in all the Terraform files – use the visual search lens for replacement as shown in the video)*
