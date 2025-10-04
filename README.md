@@ -1,13 +1,6 @@
 # 3-Tier AWS Terraform Project + Packer with StateID Lock in S3 Bucket
 
 ## For more projects, check out  
-[https://harishnshetty.github.io/projects.html](https://harishnshetty.github.io/projects.html)
-
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer.jpg)](https://youtu.be/M6BxKpSvWa4)
-
-[![Channel Link](https://github.com/harishnshetty/image-data-project/blob/9abf8f00d35d9f50dc95893102fcf3f374319383/3tieraws-project-statelock-terraform-packer%20-structure.jpg)](https://youtu.be/M6BxKpSvWa4)
-
-
 ---
 
 ## Create a Security Group
@@ -70,7 +63,7 @@
 - Create this key-pair name only / replace with own keypair name in the Iaac Project
 
 ```bash
-new-keypair
+saurabh-key-pair
 ```
 
 - Install all the application packages:
@@ -112,7 +105,7 @@ aws configure
 
 ## What are the Things I need to Replace if I do it myself
 
-- Github Repo: https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git  
+- Github Repo: 
   *(because you've changed the bucket-name in the Terraform Project)*
 
 - Source_ami: `"ami-0533167fcff018a86"`   Amazon Linux 2023 kernel-6.12 AMI    (it's in the packer .json files)  
@@ -122,7 +115,7 @@ aws configure
 
 - Path: `backend-bootstrap` | `terraform init` | `terraform plan` | `terraform apply -auto-approve`
 
-- S3 Bucket Name: `three-tier-terrafrom-s3-8745`  
+- S3 Bucket Name: `terraform-web-app-bucket-000`  
   *(replace with your new bucket name in all the Terraform files – use the visual search lens for replacement as shown in the video)*
 
 ---
@@ -132,7 +125,7 @@ aws configure
 - Clone the Project
 
 ```bash
-git clone https://github.com/harishnshetty/3-tier-aws-terraform-packer-statelock-project.git
+git clone
 ```
 
 ```bash
@@ -183,5 +176,3 @@ du -sh * .
 # Manually Delete the S3 Bucket and dynamodb table / run the command in the [ backend-bootstrap ] folder
 ```bash
 terraform destroy -auto-approve
-``` 
-[![Video Tutorial](https://github.com/harishnshetty/image-data-project/blob/c757fcf45b14c2ab0a65b0d01633685c191d88ec/Screenshot%20from%202025-09-20%2017-12-11.png)](https://www.youtube.com/@devopsHarishShetty)
